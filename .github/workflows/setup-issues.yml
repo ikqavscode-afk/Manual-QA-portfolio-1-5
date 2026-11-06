@@ -1,0 +1,26 @@
+name: Setup issues
+
+# Запуск вручную: Actions → Setup issues → Run workflow.
+# Создаёт метки и Issues из data/*.json. Повторный запуск дубликатов не создаёт.
+on:
+  workflow_dispatch:
+    inputs:
+      sprint:
+        description: "Для какого спринта создать Issues"
+        type: choice
+        default: all
+        options: [all, "2", "3", "4"]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create labels and issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/create_issues.py --apply --sprint "${{ inputs.sprint }}"

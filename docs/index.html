@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><base target="_blank">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Интерактивный чек-лист тестировщика</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1d2330;--mut:#6b7280;--ac:#2f9e7a;--bd:#e3e6ea}
+@media(prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1c2027;--tx:#e8eaee;--mut:#98a0ad;--bd:#2d333d}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.6rem;margin:0 0 4px}p.sub{color:var(--mut);margin:0 0 20px}
+.bar{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:2}
+.prog{height:10px;background:var(--bd);border-radius:6px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+button{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}button:hover{filter:brightness(.95)}
+.tabs button.on{border-color:var(--ac);box-shadow:inset 0 -3px 0 var(--ac)}
+section{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:6px 18px 12px;margin:14px 0}
+h2{font-size:1.05rem;margin:14px 0 6px}
+label{display:flex;gap:10px;padding:6px 0;cursor:pointer;align-items:flex-start}
+input[type=checkbox]{margin-top:5px;width:18px;height:18px;accent-color:var(--ac);flex:none}
+label.done span{color:var(--mut);text-decoration:line-through}
+small{color:var(--mut)}code{background:var(--bd);padding:1px 6px;border-radius:4px}
+.hide{display:none}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ac);color:#fff;padding:8px 16px;border-radius:8px;opacity:0;transition:.2s}.toast.on{opacity:1}
+.o{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.o div{border:1px solid var(--bd);border-radius:10px;padding:10px}.o b{color:var(--ac);font-size:1.2rem}
+</style>
+</head>
+<body>
+<main>
+<p><a href="https://github.com/ikqavscode-afk/qa-test-documentation">🏠 Репозиторий</a></p>
+<h1>🧪 Чек-лист тестировщика</h1>
+<p class="sub">Интерактивный чек-лист на примере «Маршрутов». Прогресс сохраняется в вашем браузере. · <a href="checklists.html">Чек-листы проектов (спринты 1–4)</a></p>
+<div class="bar">
+  <div class="prog"><i id="pb"></i></div>
+  <div class="row tabs">
+    <button class="on" data-t="list">Чек-лист</button>
+    <button data-t="oracle">Оракул FEW HICCUPS</button>
+    <button data-t="sev">Серьёзность бага</button>
+    <button data-t="lay">Верстка: генератор</button>
+    <button data-t="mob">Мобильные проверки</button>
+    <button data-t="ret">Ретест</button>
+    <span style="flex:1"></span><small id="cnt"></small>
+    <button id="copy" class="p">Скопировать как Markdown</button>
+    <button id="reset">Сбросить</button>
+  </div>
+</div>
+
+<div id="list"></div>
+
+<div id="oracle" class="hide"><section>
+<h2>Как понять, что поведение — баг?</h2>
+<p><small>Оракул — источник ожидаемого результата. Мнемоника FEW HICCUPS:</small></p>
+<div class="o">
+<div><b>F</b> Familiarity<br><small>Знакомо ли поведение по другим продуктам?</small></div>
+<div><b>E</b> Explainability<br><small>Можно ли объяснить, почему так работает?</small></div>
+<div><b>W</b> World<br><small>Соответствует ли реальному миру (время 00–23, 00–59)?</small></div>
+<div><b>H</b> History<br><small>Как вёл себя продукт раньше?</small></div>
+<div><b>I</b> Image<br><small>Соответствует ли имиджу продукта?</small></div>
+<div><b>C</b> Claims<br><small>Что заявлено в требованиях?</small></div>
+<div><b>C</b> Comparable products<br><small>Как у конкурентов?</small></div>
+<div><b>U</b> User's desires<br><small>Чего ждёт пользователь?</small></div>
+<div><b>P</b> Product / Purpose<br><small>Согласуется ли с остальным продуктом и его целью?</small></div>
+<div><b>S</b> Statutes<br><small>Стандарты, законы, нормы.</small></div>
+</div>
+<p><small>Пример: поле «Часы» принимает «24» — нарушает <b>W</b> (в сутках нет 24-го часа) и <b>C</b> (требования допускают 0–23).</small></p>
+</section></div>
+
+<div id="sev" class="hide"><section>
+<h2>Определите серьёзность и приоритет</h2>
+<label><input type="radio" name="s" value="0"><span>Продукт совсем не выполняет задачу (нельзя построить маршрут)</span></label>
+<label><input type="radio" name="s" value="1"><span>Важная функция работает неверно, но пользоваться можно (неверный расчёт цены)</span></label>
+<label><input type="radio" name="s" value="2"><span>Функция работает не так, как задумано, но результат корректен (нет автоподстановки «0»)</span></label>
+<label><input type="radio" name="s" value="3"><span>Неудобство или косметика (текст ошибки не по требованиям)</span></label>
+<p id="sevout"><small>Выберите вариант выше.</small></p>
+</section></div>
+<div id="lay" class="hide"><section>
+<h2>Генератор чек-листа верстки</h2>
+<p><small>Выберите тип элемента и введите его название — получите список проверок внешнего вида.</small></p>
+<div class="row"><select id="etype"></select><input id="ename" placeholder="Название, например: Кнопка «Забронировать»" style="flex:1;min-width:220px"><button class="p" id="gen">Сгенерировать</button></div>
+<div id="genout"></div>
+<div class="row"><button id="gencopy" class="hide">Скопировать как Markdown</button></div>
+<p><small>Дальше: <a href="sprint3/">материалы спринта 3 — реестр багов, матрица браузеров, серые зоны и тренажёр</a>.</small></p>
+</section></div>
+
+<div id="mob" class="hide"><section>
+<h2>Генератор мобильных проверок</h2>
+<p><small>Отметьте факторы, которые нужно проверить, — получите список проверок для мобильного приложения.</small></p>
+<div id="mobfactors"></div>
+<div class="row"><button class="p" id="mobgen">Сформировать</button><button id="mobcopy" class="hide">Скопировать как Markdown</button></div>
+<div id="mobout"></div>
+<p><small>Пример применения: <a href="metro/">Метро для Android — регрессия и решение о релизе</a>.</small></p>
+</section></div>
+
+<div id="ret" class="hide"><section>
+<h2>Ретест после исправлений</h2>
+<div id="retlist"></div>
+<p><small>Подробнее — в разделе «regression» проекта спринта 3.</small></p>
+</section></div>
+<div class="toast" id="toast">Скопировано</div>
+</main>
+<script>
+const DATA=[
+["1. Подготовка",[
+"Требования прочитаны и понятны — известно, что именно тестируем",
+"Уточнены ресурсы: где взять сборку и кто автор требований",
+"Известен срок и куда выносить баг-репорты и тест-кейсы",
+"Составлены классы эквивалентности и граничные значения"]],
+["2. Поле «Часы»",[
+"Значение 15 принимается: рамка не красная, ошибки нет",
+"Однозначное число (1…9) дополняется нулём: 1 → 01",
+"Границы: 0 и 23 принимаются, −1 и 24 — ошибка",
+"Дробные числа, буквы, пробел и спецсимволы — ошибка",
+"Пустое поле — ошибка «Вы ввели некорректное время»"]],
+["3. Поле «Минуты»",[
+"Значение 35 принимается",
+"Однозначное число дополняется нулём",
+"Границы: 0 и 59 принимаются, −1 и 60 — ошибка",
+"Дробные, буквы, спецсимволы, пробел — ошибка",
+"Пустое поле — ошибка"]],
+["4. Поля «Откуда» / «Куда»",[
+"Адрес из списка принимается",
+"Адрес не из списка — ошибка с текстом из требований",
+"Пробелы до и после значения удаляются автоматически",
+"Пустое поле — ошибка, красная рамка"]],
+["5. Расчёт маршрута (свой автомобиль)",[
+"Время t = S / V посчитано верно для каждого интервала суток",
+"Границы интервалов: 00:01, 08:00, 08:01, 12:00, 12:01, 18:00, 18:01, 22:00, 22:01, 00:00",
+"Стоимость = расстояние × цена за км",
+"Маршрут туда и обратно считается корректно",
+"Одинаковые адреса: расстояние 0, время и цена 0"]],
+["6. Оформление результата",[
+"Заголовок бага описывает суть одной фразой",
+"Есть шаги, ожидаемый и фактический результат",
+"Указаны окружение, серьёзность и приоритет",
+"Приложен скриншот без личных данных"]]];
+const KEY="qa-checklist-v1";let st=JSON.parse(localStorage.getItem(KEY)||"{}");
+const $=s=>document.querySelector(s);let n=0;
+$("#list").innerHTML=DATA.map(([h,items])=>`<section><h2>${h}</h2>`+items.map(t=>{const id="c"+(n++);return `<label data-id="${id}"><input type="checkbox" id="${id}"><span>${t}</span></label>`}).join("")+"</section>").join("");
+function paint(){const boxes=[...document.querySelectorAll("#list input")];let d=0;boxes.forEach(b=>{b.checked=!!st[b.id];b.parentElement.classList.toggle("done",b.checked);d+=b.checked});
+$("#pb").style.width=100*d/boxes.length+"%";$("#cnt").textContent=d+" / "+boxes.length}
+$("#list").addEventListener("change",e=>{st[e.target.id]=e.target.checked;localStorage.setItem(KEY,JSON.stringify(st));paint()});
+$("#reset").onclick=()=>{st={};localStorage.removeItem(KEY);paint()};
+$("#copy").onclick=()=>{const md=[...document.querySelectorAll("#list section")].map(s=>"### "+s.querySelector("h2").textContent+"\n"+[...s.querySelectorAll("label")].map(l=>`- [${l.querySelector("input").checked?"x":" "}] ${l.textContent.trim()}`).join("\n")).join("\n\n");
+navigator.clipboard.writeText(md).then(()=>{const t=$("#toast");t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1500)})};
+document.querySelectorAll(".tabs [data-t]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs [data-t]").forEach(x=>x.classList.toggle("on",x===b));["list","oracle","sev","lay","mob","ret"].forEach(id=>$("#"+id).classList.toggle("hide",id!==b.dataset.t))});
+const SEV=[["Blocker","High"],["Critical","High"],["Major","Medium"],["Minor / Trivial","Low"]];
+document.querySelectorAll("[name=s]").forEach(r=>r.onchange=()=>{const[a,b]=SEV[r.value];$("#sevout").innerHTML=`Серьёзность: <b>${a}</b> · Приоритет: <b>${b}</b>`});
+
+const LAY={"Текст":["положение на странице","отступы от других объектов","выравнивание (лево, право, центр)","шрифт и стиль","размер шрифта","цвет текста"],
+"Картинка":["положение","размер","отображение при разных разрешениях","формат (GIF, JPEG, PNG, WebP)","отступы от других элементов"],
+"Поле":["положение","размер (высота, ширина)","форма и скругление углов","цвет фона","границы и их цвет","подсказка внутри (цвет, шрифт, размер)","внутренние отступы","отступы от других элементов"],
+"Кнопка":["расположение","форма и скругление углов","цвет фона","границы (толщина, цвет)","тень","надпись (текст, шрифт, размер, цвет)","выравнивание надписи","внутренние отступы","отступы от других элементов"],
+"Форма":["форма и размер","структура (поля)","заголовок","границы и их цвет","подсказки внутри","названия элементов","выравнивание","внутренние и внешние отступы"],
+"Расчёт":["результат считается по формуле","отображаемые данные соответствуют расчёту"]};
+$("#etype").innerHTML=Object.keys(LAY).map(k=>`<option>${k}</option>`).join("");
+let gen=[];
+$("#gen").onclick=()=>{const t=$("#etype").value,n=$("#ename").value.trim()||t;gen=LAY[t].map(x=>`${t} «${n.replace(/^[^«]*«|»$/g,"")}» — ${x}`);
+$("#genout").innerHTML=gen.map((x,i)=>`<label><input type="checkbox"><span>${x}</span></label>`).join("");$("#gencopy").classList.remove("hide")};
+$("#gencopy").onclick=()=>{navigator.clipboard.writeText(gen.map(x=>"- [ ] "+x).join("\n")).then(()=>{const t=$("#toast");t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1500)})};
+const RET=["Мобильное приложение: ретест Critical-багов на эмуляторе и на реальном устройстве","Получена новая сборка, зафиксирована версия","Исправленные баги сверены с реестром","Ретест багов: сначала Critical, затем Major, Minor","Регрессия: успешное бронирование от адресов до окна «Машина забронирована»","Регрессия: окна прав, способа оплаты и добавления карты","Регрессия: кнопка «Забронировать» во всех состояниях","Проверено в двух окружениях (браузер и разрешение)","Пропущенные и заблокированные проверки выполнены","Статусы обновлены, отчёт о готовности пересобран","Новые дефекты оформлены отдельными баг-репортами"];
+let rs=JSON.parse(localStorage.getItem("qa-retest-v1")||"{}");
+$("#retlist").innerHTML=RET.map((t,i)=>`<label><input type="checkbox" data-r="${i}" ${rs[i]?"checked":""}><span>${t}</span></label>`).join("");
+$("#retlist").addEventListener("change",e=>{rs[e.target.dataset.r]=e.target.checked;localStorage.setItem("qa-retest-v1",JSON.stringify(rs))});
+
+const MOB={"Ориентация экрана":["масштаб и положение карты сохраняются при повороте","положение карточек сохраняется","поля ввода расположены верно в обеих ориентациях"],
+"Жесты":["свайп по карте и по карточкам","пинч и спред — масштабирование","лонг-тап не сдвигает карту"],
+"Сеть":["переключение 3G / LTE / Wi-Fi","обрыв и восстановление связи","авиарежим — уведомление об ошибке"],
+"Прерывания":["входящий звонок во время действия","push-уведомление не сбивает ввод","переключение между приложениями и возврат"],
+"Режимы устройства":["энергосбережение","низкий заряд батареи","блокировка и разблокировка экрана"],
+"Установка и обновление":["чистая установка","обновление без потери данных"],
+"Системные настройки":["масштаб интерфейса и шрифта","тёмная тема и автосмена","смена языка, часовой пояс"]};
+$("#mobfactors").innerHTML=Object.keys(MOB).map((k,i)=>`<label><input type="checkbox" class="mf" value="${k}" ${i<3?"checked":""}><span>${k}</span></label>`).join("");
+let mobList=[];
+$("#mobgen").onclick=()=>{mobList=[];document.querySelectorAll(".mf:checked").forEach(c=>MOB[c.value].forEach(x=>mobList.push(c.value+" — "+x)));
+$("#mobout").innerHTML=mobList.map(x=>`<label><input type="checkbox"><span>${x}</span></label>`).join("");$("#mobcopy").classList.remove("hide")};
+$("#mobcopy").onclick=()=>{navigator.clipboard.writeText(mobList.map(x=>"- [ ] "+x).join("\n")).then(()=>{const t=$("#toast");t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1500)})};
+paint();
+</script>
+</body>
+</html>
